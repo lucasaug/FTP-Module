@@ -28,4 +28,4 @@ clienteFTP get <nome do arquivo> <nome ou IPv6 do servidor> <porta do servidor> 
 
 ## Licença
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
