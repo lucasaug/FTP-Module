@@ -2,9 +2,26 @@
 
 Servidor e cliente simples de uma aplicação FTP. Trabalho prático para a disciplina de Redes de Computadores da Universidade Federal de Minas Gerais. Esse módulo é compatível com IPv6.
 
+## Instalação
+
+O projeto possui um Makefile. Para compilar o código do cliente, utilize:
+
+```
+make client
+```
+
+Para a compilação do servidor, use:
+
+```
+make server
+```
+
+Para compilar ambos os módulos, basta usar o comando make sem nenhuma opção adicional.
+
+
 ## Utilização
 
-O cliente se encontra na pasta client e o servidor na pasta server. Para utilização do servidor, basta utilizar o seguinte comando:
+O código da aplicação cliente se encontra na pasta [client](client) e do servidor na pasta [server](server). Os executáveis se encontram na pasta bin de cada diretório. Para utilização do servidor, basta utilizar o seguinte comando:
 
 ```
 servidorFTP <porta do servidor> <tam_buffer> <diretório a ser utilizado>
