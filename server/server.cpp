@@ -1,23 +1,30 @@
 #include <vector>
 #include <string>
+#include <cstring>
 #include <iostream>
+#include <fstream>
 #include "FileUtil.hpp"
+
+
+#include <cstdlib>
 
 int main(int argc, char* argv[]) {
 	FileUtil f;
+	f.initialize();
 
-	std::vector<std::string> folders;
-	try {
-		folders = f.listDir(argv[1]);
-	} catch(DirectoryNotFoundException& e) {
-		std::cout <<" asddasdas\n";
-		return 0;
+	int size = 5000;
+	char* buffer = (char*) malloc(sizeof(char) * size);
+
+    std::ofstream file;
+    file.open("../hello");
+
+	while (f.readFile(argv[1], buffer, size)) {
+    	file.write(buffer, size);
 	}
 
-	for(int i = 0; i < folders.size(); i++) {
-		std::string val = folders[i];
-		std::cout << val << "\n";
-	}
+    file.close();
+
+	free(buffer);
 
 	return 0;
 }
