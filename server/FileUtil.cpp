@@ -33,7 +33,7 @@ std::vector<std::string> FileUtil::listDir(std::string dirName) {
 };
 
 
-bool FileUtil::readFile(std::string fileName, char* buffer, int bufferSize) {
+bool FileUtil::readFile(std::string fileName, char* buffer, int maxBufferSize, int* readSize) {
 	if (this->filePos == -1) return false;
 
     std::ifstream file;
@@ -41,11 +41,17 @@ bool FileUtil::readFile(std::string fileName, char* buffer, int bufferSize) {
 
     file.seekg(this->filePos);
 
-    file.read(buffer, bufferSize);
+    file.read(buffer, maxBufferSize);
 
     this->filePos = file.tellg();
+    *readSize = maxBufferSize;
 
-  	if (file.eof()) this->filePos = -1;
+  	if (file.eof()) {
+  		// Flags the file as finished and removes any nul characters from the
+  		// end of the buffer (this is done to avoid corrupting text files)
+  		this->filePos = -1;
+  		while (buffer[*readSize - 1] == '\0') (*readSize)--;
+  	}
 
     file.close();
 

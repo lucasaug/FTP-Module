@@ -1,2 +1,2 @@
 all:
-	echo "client"
+	g++ -o bin/clienteFTP client.cpp

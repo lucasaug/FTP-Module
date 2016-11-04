@@ -15,7 +15,7 @@ class FileUtil {
 	public:
 	void initialize();
 	std::vector<std::string> listDir(std::string);
-	bool readFile(std::string, char*, int);
+	bool readFile(std::string, char*, int, int*);
 };
 
 class DirectoryNotFoundException: public std::exception {
