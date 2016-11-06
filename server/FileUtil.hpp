@@ -3,17 +3,17 @@
  * Descreve também as exceções utilizadas
  */
 
-#include <iostream>
-
 #ifndef _FTP_FILE_UTIL
 #define _FTP_FILE_UTIL
+
+#include <iostream>
 
 class FileUtil {
     private:
     std::ifstream file;
 
     public:
-    void initialize(std::string);
+    void initialize(std::string, std::string);
     std::vector<std::string> listDir(std::string);
     bool readFile(char*, int);
     bool eof();

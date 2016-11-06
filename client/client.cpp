@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+
 /*
  * Essa função envia dados relativos à conexão entre os processos
  * byte a byte
@@ -18,11 +19,11 @@
 int safeSend(int sock, const char* data, int length) {
     int sendSuccess = 1;
 
-    while (length-- && sendSuccess) {
-        sendSuccess = send(sock, data, 1, 0);
+    for (int i = 0; i < length && sendSuccess >= 0; i++) {
+        sendSuccess = send(sock, data + i, 1, 0);
     }
 
-    if (sendSuccess) sendSuccess = send(sock, "\0", 1, 0);
+    if (sendSuccess >= 0) sendSuccess = send(sock, "\0", 1, 0);
 
     return sendSuccess;
 }
@@ -36,6 +37,7 @@ const char* safeRecv(int sock) {
     std::string result;
 
     recv(sock, buffer, 1, 0);
+    // Lemos até encontrar um byte nulo
     while (buffer[0] != '\0') {
         buffer[1] = '\0';
         result.append(buffer);
@@ -45,10 +47,16 @@ const char* safeRecv(int sock) {
     return result.c_str();
 }
 
+/*
+ * Função que reporta um erro no formato especificado
+ */
 void reportError(int code, std::string msg) { 
     std::cout << "Erro: " << code << " - Descrição: " << msg << "\n";
 }
 
+/*
+ * Cria um socket para o cliente
+ */
 int configureSocket(char* ip_server, in_port_t port) {
     int sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
     if (sock < 0) {
@@ -56,6 +64,7 @@ int configureSocket(char* ip_server, in_port_t port) {
         return -1;
     }
 
+    // Utilizamos as structs que suportam IPv6
     struct sockaddr_in6 servAddr;
     memset(&servAddr, 0, sizeof(servAddr));
     servAddr.sin6_family = AF_INET6;
@@ -70,20 +79,36 @@ int configureSocket(char* ip_server, in_port_t port) {
     return sock;
 }
 
+/*
+ * Processa o comando list do lado do cliente, enviando a requisição
+ * e recebendo os resultados
+ */
 void processList(int sock, int bufferSize) {
-    safeSend(sock, "1", 1);
-    send(sock, "L", bufferSize, 0);
+    // Envia o tamanho do comando e em seguida o comando list
+    int sendSuccess = safeSend(sock, "1", 1);
+    
+    if (sendSuccess >= 0) sendSuccess = send(sock, "L", bufferSize, 0);
+
+    if (sendSuccess < 0) {
+        reportError(-7, "Erro de comunicação com servidor");
+        return;
+    }
 
     char* buffer = (char*) malloc(sizeof(char) * bufferSize);
 
+    // Recebe a quantidade de arquivos retornados
     const char* entries = safeRecv(sock);
 
     int numEntries = atoi(entries);
 
+    if (numEntries == 0) reportError(-999, "Diretório vazio");
+
+    // Faz a leitura de cada nome de arquivo
     std::vector<std::string> result;
     while (numEntries--) {
-        entries = safeRecv(sock);
-        int size = atoi(entries);
+        // Recebe o tamanho do nome desse arquivo
+        const char* entryLen = safeRecv(sock);
+        int size = atoi(entryLen);
 
         std::string entry = "";
         while (entry.size() < size) {
@@ -102,7 +127,12 @@ void processList(int sock, int bufferSize) {
     free(buffer);
 }
 
+/*
+ * Processa o comando get do lado do cliente, enviando a requisição
+ * e recebendo os resultados
+ */
 void processGet(int sock, char* fileName, int bufferSize) {
+    // Inicia a medição do tempo gasto
     struct timeval begin, end;
     int err = gettimeofday(&begin, NULL);
 
@@ -114,23 +144,30 @@ void processGet(int sock, char* fileName, int bufferSize) {
     std::string message = "G ";
     message.append(fileName);
 
+    // Envia o tamanho do comando
     const char* msgSize = std::to_string(message.size()).c_str();
-    safeSend(sock, msgSize, strlen(msgSize));
+    int sendSuccess = safeSend(sock, msgSize, strlen(msgSize));
 
+    // Envia o comando
     unsigned int sent = 0;
-    while (sent < message.size()) {
+    while (sent < message.size() && sendSuccess >= 0) {
         send(sock, message.substr(sent, bufferSize).c_str(), bufferSize, 0);
         sent += bufferSize;
+    }
+
+    if (sendSuccess < 0) {
+        reportError(-7, "Erro de comunicação com servidor");
+        return;
     }
 
     char* data   = (char*) malloc(sizeof(char) * bufferSize);
     char* buffer = (char*) malloc(sizeof(char) * bufferSize);
 
-    // Check if the file exists
+    // Checa se o arquivo existe
     recv(sock, buffer, 1, 0);
 
     if (buffer[0] == '0') {
-        // File doesn't exist
+        // Arquivo não existe
         reportError(-8, "Arquivo solicitado não encontrado");
         return;
     }
@@ -140,15 +177,15 @@ void processGet(int sock, char* fileName, int bufferSize) {
     // o bloco de dados recebido anteriormente
     // Isso é feito para que possamos remover os caracteres NUL do fim do
     // arquivo, já que esse tipo de evento pode corromper arquivos de texto
-    recv(sock, data, bufferSize, 0);
     unsigned int received = bufferSize;
+    recv(sock, data, bufferSize, 0);
 
     std::ofstream file;
-    file.open(fileName, std::ios::binary);
+    file.open(fileName, std::ios_base::binary);
 
     while (recv(sock, buffer, bufferSize, 0) > 0) {
         file.write(data, bufferSize);
-        strcpy(data, buffer);
+        memcpy(data, buffer, bufferSize);
         received += bufferSize;
     }
 
@@ -165,9 +202,9 @@ void processGet(int sock, char* fileName, int bufferSize) {
         return;
     }
 
-    // Time in milisseconds
+    // Tempo em milissegundos
     float spent = (1000 * (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec) / 1000);
-    // Now in seconds
+    // E agora em segundos
     spent = spent / 1000;
 
     printf("Arquivo %s\tBuffer %5u byte, %10.2f kbps (%u bytes em %3u.%06u s)\n", fileName,
@@ -175,24 +212,35 @@ void processGet(int sock, char* fileName, int bufferSize) {
            (unsigned int) (end.tv_usec - begin.tv_usec));
 }
 
+/*
+ * Função principal - Lê os argumentos e chama a função adequada para
+ * fazer a requisição e leitura dos resultados
+ */
 int main(int argc, char* argv[]) {
     if (argc < 5) {
         reportError(-1, "Erros nos argumentos de entrada");
         return -1;
     }
 
-
     if (strcmp(argv[1], "list") == 0) {
+        if (argc > 5) {
+            reportError(-1, "Erros nos argumentos de entrada");
+            return -1;
+        }
         int sock = configureSocket(argv[2], atoi(argv[3]));
+        if (sock == -1) return -1;
+
         processList(sock, atoi(argv[4]));
         close(sock);
     } else if(strcmp(argv[1], "get") == 0) {
-        if (argc < 6) {
+        if (argc < 6 || argc > 6) {
             reportError(-1, "Erros nos argumentos de entrada");
             return -1;
         }
 
         int sock = configureSocket(argv[3], atoi(argv[4]));
+        if (sock == -1) return -1;
+
         processGet(sock, argv[2], atoi(argv[5]));
         close(sock);
     } else {

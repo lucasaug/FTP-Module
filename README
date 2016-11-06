@@ -1,0 +1,21 @@
+Alunos:
+Lucas Augusto
+Samuel Oliveira
+
+Descrição:
+Implementação de um sistema de FTP seguindo as especificações passadas. A pasta client contém o código do cliente, e a pasta server contém o código do servidor. Não é necessária a instalação de bibliotecas. O código utiliza o padrão C++ 11.
+
+Compilação:
+Para compilar o cliente, entre na pasta client e execute o comando make. O resultado estará na pasta client/bin.
+Para compilar o servidor, entre na pasta server e execute o comando make. O resultado estará na pasta server/bin.
+
+Execução:
+
+Cliente - Entre na pasta client/bin após compilar o cliente. Os comandos são utilizados da seguinte maneira:
+
+* list -> ./clienteFTP list <ip> <porta> <tamanho_do_buffer>
+* get  -> ./clienteFTP get <nome_do_arquivo> <ip> <porta> <tamanho_do_buffer>
+
+Servidor - Entre na pasta server/bin após compilar o servidor. Ele é iniciado da seguinte maneira:
+
+* ./servidorFTP <porta> <tamanho_do_buffer> <diretório>
