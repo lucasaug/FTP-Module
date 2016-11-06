@@ -4,19 +4,7 @@ Servidor e cliente simples de uma aplicação FTP. Trabalho prático para a disc
 
 ## Instalação
 
-O projeto possui um Makefile. Para compilar o código do cliente, utilize:
-
-```
-make client
-```
-
-Para a compilação do servidor, use:
-
-```
-make server
-```
-
-Para compilar ambos os módulos, basta usar o comando make sem nenhuma opção adicional.
+O projeto possui um Makefile para o cliente e outro para o servidor. Basta entrar na pasta desejada e utilizar o comando make para compilar cada módulo.
 
 
 ## Utilização
