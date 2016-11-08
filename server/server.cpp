@@ -44,19 +44,18 @@ int safeSend(int sock, const char* data, int length) {
  * Essa função envia dados relativos à conexão entre os processos
  * byte a byte
  */
-const char* safeRecv(int sock) {
+std::string safeRecv(int sock) {
     char buffer[2];
     std::string result;
 
     recv(sock, buffer, 1, 0);
     // Lemos até encontrar um byte nulo
     while (buffer[0] != '\0') {
-        buffer[1] = '\0';
         result.append(buffer);
         recv(sock, buffer, 1, 0);
     }
 
-    return result.c_str();
+    return result;
 }
 
 /*
@@ -113,8 +112,8 @@ void *processConnection(void* params) {
     int numCharacters;
 
     // Primeiramente recebe a quantidade de caracteres no comando
-    const char* nChars = safeRecv(socket);
-    numCharacters = atoi(nChars);
+    std::string nChars = safeRecv(socket);
+    numCharacters = atoi(nChars.c_str());
 
     // Em seguida recebe o comando
     while (command.size() < numCharacters) {

@@ -52,7 +52,7 @@ std::vector<std::string> FileUtil::listDir(std::string dirName) {
  */
 bool FileUtil::readFile(char* buffer, int maxBufferSize) {
     memset(buffer, 0, maxBufferSize);
-    return this->file.read(buffer, maxBufferSize);
+    return !!this->file.read(buffer, maxBufferSize);
 };
 
 /*

@@ -32,19 +32,18 @@ int safeSend(int sock, const char* data, int length) {
  * Essa função envia dados relativos à conexão entre os processos
  * byte a byte
  */
-const char* safeRecv(int sock) {
+std::string safeRecv(int sock) {
     char buffer[2];
     std::string result;
 
     recv(sock, buffer, 1, 0);
     // Lemos até encontrar um byte nulo
     while (buffer[0] != '\0') {
-        buffer[1] = '\0';
         result.append(buffer);
         recv(sock, buffer, 1, 0);
     }
 
-    return result.c_str();
+    return result;
 }
 
 /*
@@ -97,9 +96,9 @@ void processList(int sock, int bufferSize) {
     char* buffer = (char*) malloc(sizeof(char) * bufferSize);
 
     // Recebe a quantidade de arquivos retornados
-    const char* entries = safeRecv(sock);
+    std::string entries = safeRecv(sock);
 
-    int numEntries = atoi(entries);
+    int numEntries = atoi(entries.c_str());
 
     if (numEntries == 0) reportError(-999, "Diretório vazio");
 
@@ -107,8 +106,8 @@ void processList(int sock, int bufferSize) {
     std::vector<std::string> result;
     while (numEntries--) {
         // Recebe o tamanho do nome desse arquivo
-        const char* entryLen = safeRecv(sock);
-        int size = atoi(entryLen);
+        std::string entryLen = safeRecv(sock);
+        int size = atoi(entryLen.c_str());
 
         std::string entry = "";
         while (entry.size() < size) {
@@ -177,7 +176,7 @@ void processGet(int sock, char* fileName, int bufferSize) {
     // o bloco de dados recebido anteriormente
     // Isso é feito para que possamos remover os caracteres NUL do fim do
     // arquivo, já que esse tipo de evento pode corromper arquivos de texto
-    unsigned int received = bufferSize;
+    unsigned long long int received = bufferSize;
     recv(sock, data, bufferSize, 0);
 
     std::ofstream file;
@@ -203,7 +202,7 @@ void processGet(int sock, char* fileName, int bufferSize) {
     }
 
     // Tempo em milissegundos
-    float spent = (1000 * (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec) / 1000);
+    long double spent = (1000 * (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec) / 1000);
     // E agora em segundos
     spent = spent / 1000;
 
