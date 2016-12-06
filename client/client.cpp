@@ -176,7 +176,7 @@ void processGet(int sock, char* fileName, int bufferSize) {
     // o bloco de dados recebido anteriormente
     // Isso é feito para que possamos remover os caracteres NUL do fim do
     // arquivo, já que esse tipo de evento pode corromper arquivos de texto
-    unsigned long long int received = bufferSize;
+    unsigned int received = bufferSize;
     recv(sock, data, bufferSize, 0);
 
     std::ofstream file;
